@@ -1,0 +1,392 @@
+# Entrada - teste API (extensia REST Client din VS Code)
+#
+# Cum se folosesc:
+#   1. Instaleaza extensia "REST Client" (humao.vscode-restclient).
+#   2. Apasa "Send Request" deasupra fiecarui bloc.
+#   3. Ruleaza-le de sus in jos: login-ul salveaza automat token-ul,
+#      iar testele urmatoare il folosesc fara sa-l copiezi manual.
+#
+# Tokenul, id-ul evenimentului si id-ul biletului sunt preluate automat
+# din raspunsuri (vezi {{login.response...}} de mai jos).
+#
+# Pentru testele de admin completeaza @adminParola mai jos.
+
+@baseUrl = http://localhost:3000
+# Pentru a testa varianta de pe Railway, comenteaza linia de sus si decomenteaz-o pe asta:
+# @baseUrl = https://entrada-production.up.railway.app
+
+# Cont normal de test
+@userNume = Test Licenta
+@userEmail = test.licenta@entrada.ro
+@userParola = parola123
+
+# Cont de admin (emailul trebuie sa fie in ADMIN_EMAILS din .env)
+@adminEmail = entrada@gmail.com
+@adminParola = parola123
+
+
+# 1. Autentificare
+
+### 1.1 Inregistrare cont nou (ruleaza o singura data; a doua oara da 409)
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+    "nume": "{{userNume}}",
+    "email": "{{userEmail}}",
+    "parola": "{{userParola}}"
+}
+
+### 1.2 Inregistrare fara campuri obligatorii (trebuie 400)
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+    "email": "fara.nume@test.ro"
+}
+
+### 1.3 Inregistrare cu email deja folosit (trebuie 409)
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+    "nume": "Alt Nume",
+    "email": "{{userEmail}}",
+    "parola": "parola123"
+}
+
+### 1.4 Login corect - salveaza tokenul pentru testele urmatoare
+# @name login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+    "email": "{{userEmail}}",
+    "parola": "{{userParola}}"
+}
+
+### 1.5 Login cu parola gresita (trebuie 401)
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+    "email": "{{userEmail}}",
+    "parola": "parola-gresita"
+}
+
+### 1.6 Login admin - salveaza tokenul de admin
+# @name loginAdmin
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+    "email": "{{adminEmail}}",
+    "parola": "{{adminParola}}"
+}
+
+
+# 2. Profil si parola (protejate)
+
+### 2.1 Actualizare profil (nume + email)
+PATCH {{baseUrl}}/api/auth/profil
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.$.token}}
+
+{
+    "nume": "Test Licenta Modificat",
+    "email": "{{userEmail}}"
+}
+
+### 2.2 Profil cu email invalid (trebuie 400)
+PATCH {{baseUrl}}/api/auth/profil
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.$.token}}
+
+{
+    "nume": "Test",
+    "email": "email-fara-arond"
+}
+
+### 2.3 Profil fara token (trebuie 401)
+PATCH {{baseUrl}}/api/auth/profil
+Content-Type: application/json
+
+{
+    "nume": "Test",
+    "email": "{{userEmail}}"
+}
+
+### 2.4 Schimbare parola cu parola veche gresita (trebuie 401)
+PATCH {{baseUrl}}/api/auth/parola
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.$.token}}
+
+{
+    "parola_veche": "gresit",
+    "parola_noua": "parolanoua123"
+}
+
+### 2.5 Schimbare parola cu parola noua prea scurta (trebuie 400)
+PATCH {{baseUrl}}/api/auth/parola
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.$.token}}
+
+{
+    "parola_veche": "{{userParola}}",
+    "parola_noua": "123"
+}
+
+
+# 3. Evenimente
+
+### 3.1 Lista evenimentelor (public)
+GET {{baseUrl}}/api/evenimente
+
+### 3.2 Detaliile unui eveniment (public)
+GET {{baseUrl}}/api/evenimente/1
+
+### 3.3 Eveniment inexistent (trebuie 404)
+GET {{baseUrl}}/api/evenimente/999999
+
+### 3.4 Creare eveniment ca admin - salveaza id-ul
+# @name creeazaEveniment
+POST {{baseUrl}}/api/evenimente
+Content-Type: application/json
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+
+{
+    "titlu": "Eveniment de test",
+    "locatie": "Iasi",
+    "data_eveniment": "2026-12-31T19:00:00",
+    "locuri_totale": 100,
+    "pret": 50,
+    "descriere": "Eveniment creat din fisierul de teste."
+}
+
+### 3.5 Creare eveniment fara token (trebuie 401)
+POST {{baseUrl}}/api/evenimente
+Content-Type: application/json
+
+{
+    "titlu": "Neautorizat",
+    "data_eveniment": "2026-12-31T19:00:00",
+    "locuri_totale": 10
+}
+
+### 3.6 Creare eveniment ca user normal (trebuie 403)
+POST {{baseUrl}}/api/evenimente
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.$.token}}
+
+{
+    "titlu": "User normal",
+    "data_eveniment": "2026-12-31T19:00:00",
+    "locuri_totale": 10
+}
+
+### 3.7 Creare eveniment cu data in trecut (trebuie 400)
+POST {{baseUrl}}/api/evenimente
+Content-Type: application/json
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+
+{
+    "titlu": "In trecut",
+    "data_eveniment": "2020-01-01T19:00:00",
+    "locuri_totale": 10
+}
+
+### 3.8 Creare eveniment cu pret negativ (trebuie 400)
+POST {{baseUrl}}/api/evenimente
+Content-Type: application/json
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+
+{
+    "titlu": "Pret negativ",
+    "data_eveniment": "2026-12-31T19:00:00",
+    "locuri_totale": 10,
+    "pret": -50
+}
+
+### 3.9 Editare eveniment ca admin (foloseste id-ul de la 3.4)
+PATCH {{baseUrl}}/api/evenimente/{{creeazaEveniment.response.body.$.eveniment.id}}
+Content-Type: application/json
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+
+{
+    "pret": 75
+}
+
+
+# 4. Rezervari
+
+### 4.1 Rezervare valida - salveaza id-ul biletului
+# @name rezerva
+POST {{baseUrl}}/api/rezervari
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.$.token}}
+
+{
+    "eveniment_id": {{creeazaEveniment.response.body.$.eveniment.id}},
+    "nr_locuri": 2
+}
+
+### 4.2 Rezervare cu mai multe locuri decat exista (trebuie 409)
+POST {{baseUrl}}/api/rezervari
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.$.token}}
+
+{
+    "eveniment_id": {{creeazaEveniment.response.body.$.eveniment.id}},
+    "nr_locuri": 99999
+}
+
+### 4.3 Rezervare la eveniment inexistent (trebuie 404)
+POST {{baseUrl}}/api/rezervari
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.$.token}}
+
+{
+    "eveniment_id": 999999,
+    "nr_locuri": 1
+}
+
+### 4.4 Rezervare fara token (trebuie 401)
+POST {{baseUrl}}/api/rezervari
+Content-Type: application/json
+
+{
+    "eveniment_id": 1,
+    "nr_locuri": 1
+}
+
+### 4.5 Biletele mele
+GET {{baseUrl}}/api/rezervari/mele
+Authorization: Bearer {{login.response.body.$.token}}
+
+### 4.6 Anulare bilet (foloseste id-ul de la 4.1)
+DELETE {{baseUrl}}/api/rezervari/{{rezerva.response.body.$.rezervare.id}}
+Authorization: Bearer {{login.response.body.$.token}}
+
+
+# 5. Plati (plata simulata cu cardul)
+
+### 5.1 Checkout cu card valid (numar 4242..., trece algoritmul Luhn)
+POST {{baseUrl}}/api/plati/checkout
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.$.token}}
+
+{
+    "articole": [
+        { "eveniment_id": {{creeazaEveniment.response.body.$.eveniment.id}}, "nr_locuri": 1 }
+    ],
+    "card": { "numar": "4242 4242 4242 4242", "nume": "Test Licenta", "exp": "12/30", "cvv": "123" },
+    "facturare": { "nume": "Test Licenta", "email": "{{userEmail}}" }
+}
+
+### 5.2 Card invalid - pica algoritmul Luhn (trebuie 402)
+POST {{baseUrl}}/api/plati/checkout
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.$.token}}
+
+{
+    "articole": [ { "eveniment_id": {{creeazaEveniment.response.body.$.eveniment.id}}, "nr_locuri": 1 } ],
+    "card": { "numar": "1234 5678 1234 5678", "nume": "Test Licenta", "exp": "12/30", "cvv": "123" },
+    "facturare": { "nume": "Test Licenta", "email": "{{userEmail}}" }
+}
+
+### 5.3 Card expirat (trebuie 402)
+POST {{baseUrl}}/api/plati/checkout
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.$.token}}
+
+{
+    "articole": [ { "eveniment_id": {{creeazaEveniment.response.body.$.eveniment.id}}, "nr_locuri": 1 } ],
+    "card": { "numar": "4242 4242 4242 4242", "nume": "Test Licenta", "exp": "01/20", "cvv": "123" },
+    "facturare": { "nume": "Test Licenta", "email": "{{userEmail}}" }
+}
+
+### 5.4 Checkout cu cosul gol (trebuie 400)
+POST {{baseUrl}}/api/plati/checkout
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.$.token}}
+
+{
+    "articole": [],
+    "card": { "numar": "4242 4242 4242 4242", "nume": "Test", "exp": "12/30", "cvv": "123" },
+    "facturare": { "nume": "Test", "email": "{{userEmail}}" }
+}
+
+### 5.5 Istoricul comenzilor mele
+GET {{baseUrl}}/api/plati/comenzile-mele
+Authorization: Bearer {{login.response.body.$.token}}
+
+
+# 6. Favorite (evenimente salvate)
+
+### 6.1 Salveaza un eveniment la favorite
+POST {{baseUrl}}/api/favorite
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.$.token}}
+
+{ "eveniment_id": {{creeazaEveniment.response.body.$.eveniment.id}} }
+
+### 6.2 Lista favoritelor mele
+GET {{baseUrl}}/api/favorite
+Authorization: Bearer {{login.response.body.$.token}}
+
+### 6.3 Doar id-urile salvate (pentru inimioare)
+GET {{baseUrl}}/api/favorite/id-uri
+Authorization: Bearer {{login.response.body.$.token}}
+
+### 6.4 Salvare la eveniment inexistent (trebuie 404)
+POST {{baseUrl}}/api/favorite
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.$.token}}
+
+{ "eveniment_id": 999999 }
+
+### 6.5 Scoate de la favorite
+DELETE {{baseUrl}}/api/favorite/{{creeazaEveniment.response.body.$.eveniment.id}}
+Authorization: Bearer {{login.response.body.$.token}}
+
+
+# 7. Administrator
+
+### 7.1 Statistici (tablou de bord)
+GET {{baseUrl}}/api/admin/sumar
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+
+### 7.2 Toate biletele tuturor utilizatorilor
+GET {{baseUrl}}/api/admin/rezervari
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+
+### 7.3 Toate platile
+GET {{baseUrl}}/api/admin/comenzi
+Authorization: Bearer {{loginAdmin.response.body.$.token}}
+
+
+# 8. Securitate (teste negative)
+
+### 8.1 Ruta de admin fara token (trebuie 401)
+GET {{baseUrl}}/api/admin/sumar
+
+### 8.2 Ruta de admin ca user normal (trebuie 403)
+GET {{baseUrl}}/api/admin/sumar
+Authorization: Bearer {{login.response.body.$.token}}
+
+### 8.3 Token modificat / falsificat (trebuie 403)
+GET {{baseUrl}}/api/rezervari/mele
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.AAAAAAAAAAAAAAAA.semnatura-falsa
+
+### 8.4 Incercare de SQL injection la login (trebuie 401, nu 500)
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+    "email": "' OR '1'='1",
+    "parola": "' OR '1'='1"
+}
+
+### 8.5 Anulare bilet care nu-ti apartine (trebuie 404)
+DELETE {{baseUrl}}/api/rezervari/1
+Authorization: Bearer {{login.response.body.$.token}}

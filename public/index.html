@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entrada — evenimente în Iași</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&display=swap" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&display=swap"></noscript>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="topbar">
+        <div class="wrap topbar-inner">
+            <a class="brand" href="#">Entrada<span class="dot">.</span></a>
+            <nav class="nav-links">
+                <a href="#">Program</a>
+                <a href="#despre">Despre</a>
+                <a href="#contact">Contact</a>
+            </nav>
+            <div class="topbar-right">
+                <button id="btn-salvate" class="btn btn-line btn-cos ascuns" aria-label="Evenimente salvate">♥ Salvate<span id="salvate-nr" class="cos-badge ascuns">0</span></button>
+                <button id="btn-cos" class="btn btn-line btn-cos" aria-label="Coș de cumpărături">🛒 Coș<span id="cos-nr" class="cos-badge ascuns">0</span></button>
+                <button id="btn-auth" class="btn btn-line">Cont</button>
+                <button id="btn-admin" class="btn btn-line ascuns">⚙ Admin</button>
+                <button id="btn-cont-avatar" class="btn-avatar ascuns" aria-label="Contul meu">
+                    <span class="avatar-cerc" id="avatar-initiala">?</span>
+                    <span class="avatar-nume" id="avatar-nume"></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div id="vedere-acasa">
+    <section class="hero">
+        <div class="wrap">
+            <p class="kicker">Iași · sezonul 2026</p>
+            <h1 class="hero-title">Evenimentele orașului,<br>într-un singur loc.</h1>
+            <p class="hero-lead">Conferințe, ateliere și concerte. Alegi locul, primești biletul pe loc, fără cozi și fără telefoane.</p>
+            <div class="hero-jos">
+                <div class="hero-stat">
+                    <strong id="stat-nr">—</strong>
+                    <span>evenimente active</span>
+                </div>
+                <div class="hero-pastile">
+                    <span class="hero-pastila"><span class="hp-ic">🎟️</span> Disponibilitate în timp real</span>
+                    <span class="hero-pastila"><span class="hp-ic">⚡</span> Bilet instant la confirmare</span>
+                    <span class="hero-pastila"><span class="hp-ic">🔒</span> Plată sigură, simulată</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <main class="wrap">
+        <section id="evenimente" class="bloc">
+            <div class="bloc-head">
+                <h2>Program</h2>
+                <p class="bloc-sub">Selectează un eveniment pentru detalii și rezervare.</p>
+            </div>
+            <div class="filtre-bar">
+                <input id="cauta-eveniment" type="search" placeholder="Caută după nume sau locație...">
+                <div class="filtre-chips">
+                    <button class="chip activ" data-filtru="toate">Toate</button>
+                    <button class="chip" data-filtru="disponibile">Cu locuri</button>
+                    <button class="chip" data-filtru="gratuite">Gratuite</button>
+                </div>
+            </div>
+            <div id="lista-evenimente" class="lista"></div>
+        </section>
+
+        <section id="sectiune-rezervari" class="bloc ascuns">
+            <div class="bloc-head bloc-head-flex">
+                <div>
+                    <h2>Biletele mele</h2>
+                    <p class="bloc-sub">Rezervările confirmate pe contul tău.</p>
+                </div>
+                <button id="btn-anuleaza-tot" class="btn-anuleaza-tot ascuns">Anulează toate</button>
+            </div>
+            <div id="lista-rezervari" class="bilete"></div>
+        </section>
+
+        <section id="sectiune-salvate" class="bloc ascuns">
+            <div class="bloc-head">
+                <h2>Evenimente salvate</h2>
+                <p class="bloc-sub">Evenimentele pe care le-ai marcat ca favorite.</p>
+            </div>
+            <div id="lista-salvate" class="lista"></div>
+        </section>
+
+    </main>
+    </div><!-- /vedere-acasa -->
+
+    <main class="wrap pagini-info">
+        <section id="pagina-admin" class="pagina-info ascuns">
+            <div class="cont-layout">
+                <aside class="cont-sidebar">
+                    <div class="cont-card">
+                        <div class="cont-avatar-mare">A</div>
+                        <div class="cont-nume-mare">Administrator</div>
+                        <div class="cont-email-mare">Panou de control</div>
+                    </div>
+                    <nav class="cont-meniu">
+                        <button class="cont-tab activ" data-apanou="statistici"><span class="ct-ic">📊</span> Statistici</button>
+                        <button class="cont-tab" data-apanou="adauga"><span class="ct-ic">➕</span> Adaugă eveniment</button>
+                        <button class="cont-tab" data-apanou="bilete"><span class="ct-ic">🎟️</span> Bilete vândute</button>
+                        <button class="cont-tab" data-apanou="evenimente"><span class="ct-ic">📅</span> Evenimente</button>
+                    </nav>
+                </aside>
+
+                <div class="cont-continut">
+                    <!-- Panou: Statistici -->
+                    <div class="admin-panou" data-apanou="statistici">
+                        <h2 class="cont-panou-titlu">Statistici</h2>
+                        <div id="admin-statistici" class="admin-stat-grid"></div>
+                    </div>
+
+                    <!-- Panou: Adaugă eveniment -->
+                    <div class="admin-panou ascuns" data-apanou="adauga">
+                        <h2 class="cont-panou-titlu">Adaugă un eveniment</h2>
+                        <form id="form-eveniment" class="admin-form">
+                            <label>Titlu<input id="ev-titlu" type="text" required></label>
+                            <label>Locație<input id="ev-locatie" type="text"></label>
+                            <label>Data și ora<input id="ev-data" type="datetime-local" required></label>
+                            <label>Locuri<input id="ev-locuri" type="number" min="1" required></label>
+                            <label>Preț (lei)<input id="ev-pret" type="number" min="0" step="0.01" value="0"></label>
+                            <label class="admin-form-lat">Descriere<textarea id="ev-descriere" rows="2"></textarea></label>
+                            <button type="submit" class="btn btn-fill admin-form-lat">Creează eveniment</button>
+                            <p class="mesaj" id="mesaj-eveniment"></p>
+                        </form>
+                    </div>
+
+                    <!-- Panou: Bilete -->
+                    <div class="admin-panou ascuns" data-apanou="bilete">
+                        <h2 class="cont-panou-titlu">Toate biletele</h2>
+                        <div id="admin-bilete" class="admin-tabel"></div>
+                    </div>
+
+                    <!-- Panou: Evenimente -->
+                    <div class="admin-panou ascuns" data-apanou="evenimente">
+                        <h2 class="cont-panou-titlu">Gestionare evenimente</h2>
+                        <div id="admin-evenimente" class="admin-tabel"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="pagina-cont" class="pagina-info ascuns">
+            <div class="cont-layout">
+                <aside class="cont-sidebar">
+                    <div class="cont-card">
+                        <div class="cont-avatar-mare" id="cont-avatar-mare">?</div>
+                        <div class="cont-nume-mare" id="cont-nume-mare">—</div>
+                        <div class="cont-email-mare" id="cont-email-mare">—</div>
+                    </div>
+                    <nav class="cont-meniu">
+                        <button class="cont-tab activ" data-panou="profil"><span class="ct-ic">👤</span> Profil</button>
+                        <button class="cont-tab" data-panou="securitate"><span class="ct-ic">🔒</span> Securitate</button>
+                        <button class="cont-tab" data-panou="comenzi"><span class="ct-ic">🧾</span> Comenzi</button>
+                        <button class="cont-tab" data-panou="favorite"><span class="ct-ic">♥</span> Favorite</button>
+                        <button class="cont-tab cont-tab-iesire" id="cont-deconectare"><span class="ct-ic">⎋</span> Deconectare</button>
+                    </nav>
+                </aside>
+
+                <div class="cont-continut">
+                    <!-- Panou: Profil -->
+                    <div class="cont-panou" data-panou="profil">
+                        <h2 class="cont-panou-titlu">Setări profil</h2>
+                        <form id="form-profil" class="cont-form">
+                            <label>Nume complet<input id="profil-nume" type="text" required></label>
+                            <label>Email<input id="profil-email" type="email" required></label>
+                            <button type="submit" class="btn btn-fill">Actualizează</button>
+                            <p class="mesaj" id="mesaj-profil"></p>
+                        </form>
+                    </div>
+
+                    <!-- Panou: Securitate -->
+                    <div class="cont-panou ascuns" data-panou="securitate">
+                        <h2 class="cont-panou-titlu">Securitate</h2>
+                        <form id="form-parola" class="cont-form">
+                            <label>Parola actuală<input id="parola-veche" type="password" required></label>
+                            <label>Parola nouă<input id="parola-noua" type="password" placeholder="minim 6 caractere" required></label>
+                            <label>Confirmă parola nouă<input id="parola-confirm" type="password" required></label>
+                            <button type="submit" class="btn btn-fill">Schimbă parola</button>
+                            <p class="mesaj" id="mesaj-parola"></p>
+                        </form>
+                    </div>
+
+                    <!-- Panou: Comenzi -->
+                    <div class="cont-panou ascuns" data-panou="comenzi">
+                        <h2 class="cont-panou-titlu">Comenzile mele</h2>
+                        <div id="cont-comenzi" class="cont-lista"></div>
+                    </div>
+
+                    <!-- Panou: Favorite -->
+                    <div class="cont-panou ascuns" data-panou="favorite">
+                        <h2 class="cont-panou-titlu">Evenimente salvate</h2>
+                        <div id="cont-favorite" class="lista"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="pagina-despre" class="bloc bloc-text pagina-info ascuns">
+            <h2>Despre noi</h2>
+            <p>Entrada este o platformă dedicată organizării și participării la evenimente din Iași. Punem la dispoziția participanților un mod simplu de a descoperi conferințe, ateliere, concerte și competiții, cu rezervare în timp real și bilet generat automat la confirmare.</p>
+            <p>Proiectul a pornit dintr-o nevoie reală a organizatorilor locali: înlocuirea listelor pe hârtie, a tabelelor de calcul și a confirmărilor prin e-mail cu un sistem centralizat, rapid și sigur. Pentru participanți, asta înseamnă acces de pe orice dispozitiv și certitudinea că locul rezervat le este garantat.</p>
+            <p>Platforma este dezvoltată ca lucrare de licență, cu accent pe corectitudinea tranzacțiilor, securitatea datelor și o experiență de utilizare clară.</p>
+        </section>
+
+        <section id="pagina-contact" class="bloc pagina-info ascuns">
+            <div class="bloc-head">
+                <h2>Contact</h2>
+                <p class="bloc-sub">Suntem aici pentru întrebări despre evenimente, bilete sau colaborări.</p>
+            </div>
+            <div class="contact-card">
+                <h3>Entrada</h3>
+                <p class="contact-program">Luni – Vineri 12.00–16.00</p>
+                <p class="contact-rand"><span class="ic">✆</span> +4 0742 318 905</p>
+                <p class="contact-rand"><span class="ic">✉</span> contact@entrada.ro</p>
+                <p class="contact-rand"><span class="ic">📍</span> Iași, România</p>
+                <a href="mailto:contact@entrada.ro" class="btn btn-contact">Scrie-ne</a>
+            </div>
+        </section>
+
+        <section id="pagina-termeni" class="bloc bloc-text pagina-info ascuns">
+            <h2>Termeni și condiții</h2>
+            <p>Prin utilizarea platformei Entrada accepți termenii de mai jos. Te rugăm să îi citești înainte de a-ți crea un cont sau de a rezerva un bilet.</p>
+            <p><strong>Conturi.</strong> Pentru a rezerva bilete este necesar un cont cu o adresă de e-mail validă. Ești responsabil pentru păstrarea confidențialității parolei și pentru activitatea desfășurată din contul tău.</p>
+            <p><strong>Rezervări și bilete.</strong> O rezervare este confirmată în limita locurilor disponibile, în timp real. Fiecare bilet primește un cod unic și este asociat contului tău, iar disponibilitatea se actualizează automat la fiecare rezervare sau anulare.</p>
+            <p><strong>Plăți.</strong> Plățile cu cardul de pe această platformă sunt simulate, în scop demonstrativ, în cadrul unei lucrări de licență. Nu se procesează tranzacții reale și nu se rețin datele complete ale cardului — se păstrează doar ultimele patru cifre, pentru identificarea comenzii.</p>
+            <p><strong>Anulări.</strong> Biletele pot fi anulate din contul propriu, caz în care locurile sunt eliberate automat și redevin disponibile altor utilizatori. Administratorii pot anula bilete în situații justificate.</p>
+            <p><strong>Conduita utilizatorului.</strong> Este interzisă utilizarea platformei pentru fraudă, rezervări abuzive sau orice acțiune care afectează funcționarea normală a serviciului.</p>
+            <p><strong>Modificări.</strong> Termenii pot fi actualizați periodic. Versiunea aplicabilă este cea afișată pe această pagină.</p>
+        </section>
+
+        <section id="pagina-confidentialitate" class="bloc bloc-text pagina-info ascuns">
+            <h2>Politica de confidențialitate</h2>
+            <p>Entrada prelucrează datele personale ale utilizatorilor exclusiv în scopul funcționării platformei de rezervări. Datele colectate se limitează la numele, adresa de e-mail și istoricul rezervărilor fiecărui cont.</p>
+            <p><strong>Stocarea datelor.</strong> Parolele nu sunt păstrate în formă citibilă. Acestea sunt transformate ireversibil printr-un algoritm de tip hash înainte de a fi salvate, astfel încât nici administratorii platformei nu le pot vedea în clar.</p>
+            <p><strong>Utilizarea datelor.</strong> Informațiile sunt folosite doar pentru autentificare, pentru gestionarea rezervărilor și pentru afișarea biletelor proprii. Datele nu sunt vândute și nu sunt transmise către terți în scopuri comerciale.</p>
+            <p><strong>Drepturile utilizatorului.</strong> Orice utilizator poate solicita ștergerea contului și a datelor asociate. La anularea unei rezervări, locurile sunt eliberate automat, iar înregistrarea este ștearsă din baza de date.</p>
+            <p><strong>Securitate.</strong> Accesul la zonele personale este protejat prin token-uri de autentificare cu durată limitată. Fiecare cerere către server este verificată individual.</p>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="wrap footer-inner">
+            <div>
+                <span class="footer-brand">Entrada<span class="dot">.</span></span>
+                <span class="footer-tech">Node.js · Express · PostgreSQL</span>
+            </div>
+            <nav class="footer-links">
+                <a href="#despre">Despre</a>
+                <a href="#contact">Contact</a>
+                <a href="#termeni">Termeni și condiții</a>
+                <a href="#confidentialitate">Confidențialitate</a>
+            </nav>
+        </div>
+    </footer>
+
+    <div id="modal" class="modal ascuns">
+        <div class="modal-card">
+            <button id="modal-close" class="modal-close" aria-label="Închide">&times;</button>
+            <h3 class="modal-title">Bine ai revenit</h3>
+            <div class="taburi">
+                <button id="tab-login" class="tab activ">Autentificare</button>
+                <button id="tab-register" class="tab">Cont nou</button>
+            </div>
+            <form id="form-login" class="formular">
+                <label>Email<input type="email" id="login-email" placeholder="nume@exemplu.ro" required></label>
+                <label>Parolă<input type="password" id="login-parola" placeholder="••••••••" required></label>
+                <button type="submit" class="btn btn-fill">Intră în cont</button>
+                <p class="mesaj" id="mesaj-login"></p>
+            </form>
+            <form id="form-register" class="formular ascuns">
+                <label>Nume complet<input type="text" id="reg-nume" placeholder="Marin Luca" required></label>
+                <label>Email<input type="email" id="reg-email" placeholder="nume@exemplu.ro" required></label>
+                <label>Parolă<input type="password" id="reg-parola" placeholder="minim 6 caractere" required></label>
+                <button type="submit" class="btn btn-fill">Creează cont</button>
+                <p class="mesaj" id="mesaj-register"></p>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-detalii" class="modal ascuns">
+        <div class="modal-card modal-detalii-card">
+            <button id="detalii-close" class="modal-close" aria-label="Închide">&times;</button>
+            <div id="detalii-continut"></div>
+        </div>
+    </div>
+
+    <div id="modal-cos" class="modal ascuns">
+        <div class="modal-card modal-cos-card">
+            <button id="cos-close" class="modal-close" aria-label="Închide">&times;</button>
+
+            <!-- Pasul 1: coșul -->
+            <div id="cos-pas-cos">
+                <h3 class="modal-title">Coșul tău</h3>
+                <div id="cos-lista" class="cos-lista"></div>
+                <div id="cos-rezumat" class="cos-rezumat ascuns">
+                    <div class="cos-total-rand"><span>Total de plată</span><span id="cos-total">0 lei</span></div>
+                    <button id="btn-spre-plata" class="btn btn-fill">Continuă la plată</button>
+                </div>
+            </div>
+
+            <!-- Pasul 2: detalii de plată -->
+            <form id="cos-pas-plata" class="formular ascuns">
+                <button type="button" id="btn-inapoi-cos" class="link-inapoi">&larr; Înapoi la coș</button>
+                <h3 class="modal-title">Detalii de plată</h3>
+
+                <p class="plata-sectiune">Date de facturare</p>
+                <label>Nume complet<input id="fact-nume" type="text" placeholder="Marin Luca" autocomplete="name" required></label>
+                <label>Email<input id="fact-email" type="email" placeholder="nume@exemplu.ro" autocomplete="email" required></label>
+
+                <p class="plata-sectiune">Card</p>
+                <label>Număr card<input id="card-numar" type="text" inputmode="numeric" placeholder="4242 4242 4242 4242" autocomplete="cc-number" maxlength="23"></label>
+                <label>Titular card<input id="card-nume" type="text" placeholder="NUME PRENUME" autocomplete="cc-name"></label>
+                <div class="plata-rand-2">
+                    <label>Expirare<input id="card-exp" type="text" inputmode="numeric" placeholder="LL/AA" autocomplete="cc-exp" maxlength="5"></label>
+                    <label>CVV<input id="card-cvv" type="text" inputmode="numeric" placeholder="123" autocomplete="cc-csc" maxlength="4"></label>
+                </div>
+
+                <p class="plata-nota">🔒 Plată simulată, în scop demonstrativ. Datele cardului nu sunt salvate.</p>
+                <button type="submit" id="btn-plateste" class="btn btn-fill">Plătește <span id="plata-suma"></span></button>
+                <p class="mesaj" id="mesaj-plata"></p>
+            </form>
+
+            <!-- Pasul 3: confirmare -->
+            <div id="cos-pas-gata" class="cos-gata ascuns">
+                <div class="gata-icon">✓</div>
+                <h3 class="modal-title">Plată confirmată</h3>
+                <p class="gata-text" id="gata-text"></p>
+                <div id="gata-bilete" class="gata-bilete"></div>
+                <button id="btn-gata-close" class="btn btn-fill">Vezi biletele mele</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast ascuns"></div>
+    <script src="app.js" defer></script>
+</body>
+</html>
